@@ -51,21 +51,22 @@ terraform apply
 
 Terraform создаст виртуальную машину через Vagrant и запустит Ansible для настройки и деплоя.
 
----
+
 
 ## Переключение способа развёртывания
 
 По умолчанию микросервис развёртывается в Docker-контейнере.  
 Можно переключиться на запуск **на сервере без контейнера**, удалив в файле `main.tf` -e container_runtime=server:
 
-Пример:
+Запуск микросервиса на ВМ:
 ```hcl
 command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ./ansible/inventories/hosts ./ansible/playbook.yml"
-``` - запуск микросервиса на вм.
+```
 
+Запуск микросервиса через контейнере:
 ```hcl
 command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ./ansible/inventories/hosts ./ansible/playbook.yml -e container_runtime=server"
-``` - запуск микросервиса через контейнер.
+``` 
 
 ## Доступ к микросервису
 

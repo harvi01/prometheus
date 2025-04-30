@@ -1,0 +1,47 @@
+---
+  - name: Установить зависимости
+    ansible.builtin.yum:
+      name:
+        - python3
+        - python3-pip
+      state: present
+
+  - name: Установить необходимые Python пакеты
+    ansible.builtin.pip:
+      name:
+        - flask
+        - prometheus_client
+      state: present
+
+  - name: Скопировать микросервис
+    ansible.builtin.copy:
+      src: ../../../../microservice.py
+      dest: /home/vagrant/microservice.py
+      mode: '0755'
+
+  - name: Создать сервис для микросервиса
+    ansible.builtin.copy:
+      dest: /etc/systemd/system/microservice.service
+      content: |
+        [Unit]
+        Description=Microservice HTTP Server
+
+        [Service]
+        ExecStart=/usr/bin/python3 /home/vagrant/microservice.py
+        Restart=always
+        User=vagrant
+        WorkingDirectory=/home/vagrant
+
+        [Install]
+        WantedBy=multi-user.target
+
+  - name: Перезагрузить systemd
+    ansible.builtin.systemd:
+      name: microservice
+      daemon_reload: yes
+
+  - name: Запустить микросервис
+    ansible.builtin.systemd:
+      name: microservice
+      state: started
+      enabled: yes

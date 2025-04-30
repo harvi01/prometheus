@@ -1,0 +1,46 @@
+---
+- name: Развертывание микросервиса
+  hosts: rocky
+  become: yes
+  tasks:
+
+    - name: Скопировать микросервис
+      ansible.builtin.copy:
+        src: ../Dockerfile
+        dest: /home/vagrant/Dockerfile
+        mode: '0755'
+        
+    - name: Проверить, запускать ли в контейнере
+      debug:
+        msg: "Запускать в контейнере"
+      when: container_runtime is defined and container_runtime == "docker"
+    
+    - name: Установить и запустить firewalld
+      ansible.builtin.yum:
+        name: firewalld
+        state: present
+    
+    - name: Убедиться, что firewalld запущен
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: yes
+    
+    - name: Открыть порт 8080 на firewalld
+      ansible.posix.firewalld:
+        port: 8080/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+    
+    - name: Перезагрузить firewalld
+      ansible.builtin.command: firewall-cmd --reload
+      become: yes
+    
+    - name: Запуск микросервиса на ВМ
+      include_tasks: roles/microservice/tasks/main.yml
+      when: container_runtime is not defined or container_runtime != "docker"
+
+    - name: Запуск микросервиса в контейнере
+      include_tasks: roles/docker/tasks/main.yml
+      when: container_runtime is defined and container_runtime == "docker"
